@@ -2,6 +2,7 @@
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -59,6 +60,10 @@ class ServiceRequest(models.Model):
 
     due_at = models.DateTimeField(null=True, blank=True)
 
+    resolution_summary = models.TextField(blank=True)
+
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
     priority = models.PositiveSmallIntegerField(
         default=3,
         validators=[
@@ -92,6 +97,25 @@ class ServiceRequest(models.Model):
                 name="request_priority_between_1_and_5",
             ),
         ]
+
+    def clean(self):
+        super().clean()
+
+        if self.status in [self.Status.RESOLVED, self.Status.CLOSED]:
+            errors = {}
+
+            if not self.resolved_at:
+                errors["resolved_at"] = (
+                    "A resolved or closed request must have a resolution date."
+                )
+
+            if not self.resolution_summary.strip():
+                errors["resolution_summary"] = (
+                    "A resolved or closed request must have a resolution summary."
+                )
+
+            if errors:
+                raise ValidationError(errors)
 
     def __str__(self):
         return f"{self.title} ({self.get_status_display()})"

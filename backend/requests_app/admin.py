@@ -20,13 +20,37 @@ class ServiceRequestAdmin(admin.ModelAdmin):
         "status",
         "priority",
         "due_at",
+        "resolved_at",
         "created_at",
     )
 
     list_filter = ("status", "priority", "category")
-    search_fields = ("title", "description")
+    search_fields = ("title", "description", "resolution_summary")
     readonly_fields = ("created_at", "updated_at")
+
     ordering = ("-created_at",)
+
+    fieldsets = (
+        ("Request Information", {
+            "fields": (
+                "title",
+                "description",
+                "category",
+                "requester",
+                "status",
+                "priority",
+            )
+        }),
+        ("Service Level", {
+            "fields": ("due_at",)
+        }),
+        ("Resolution Information", {
+            "fields": ("resolved_at", "resolution_summary")
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at")
+        }),
+    )
 
 
 @admin.register(WorkOrder)
